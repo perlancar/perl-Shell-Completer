@@ -3,14 +3,37 @@ package Shell::Completer;
 # DATE
 # VERSION
 
-use strict;
+use strict 'vars', 'subs';
 use warnings;
 
-export Exporter qw(import);
+our %comp_funcs = (
+    _dir           => ['File', 'complete_dir'],
+    _file          => ['File', 'complete_file'],
+    _gid           => ['Unix', 'complete_gid'],
+    _group         => ['Unix', 'complete_group'],
+    _pid           => ['Unix', 'complete_pid'],
+    _uid           => ['Unix', 'complete_uid'],
+    _user          => ['Unix', 'complete_user'],
+);
+
+for my $f (keys %comp_funcs) {
+    my $fv = $comp_funcs{$f};
+    eval <<_;
+sub $f {
+    my \%fargs = \@_;
+    require Complete::$fv->[0];
+    sub {
+        my \%args = \@_;
+        Complete::$fv->[0]::$fv->[1](\%fargs, word => \$args{word});
+    };
+}
+_
+    die "Can't declare $f: $@" if $@;
+}
+
+use Exporter qw(import);
 our @ISA = qw(Exporter);
-our @EXPORT = qw(
-                    declare_completer
-            );
+our @EXPORT = (keys %comp_funcs, "declare_completer");
 
 sub declare_completer {
     my %fargs = @_;
@@ -29,7 +52,9 @@ sub declare_completer {
     my $getopt_spec = {};
     for my $o (keys %{$fargs{options}}) {
         my $ov = $fargs{options}{$o};
-        if (ref($ov) eq 'ARRAY') {
+        if (!defined($ov)) {
+            $ov = sub { undef };
+        } elsif (ref($ov) eq 'ARRAY') {
             $ov = sub {
                 my %args = @_;
                 require Complete::Util;
@@ -44,6 +69,7 @@ sub declare_completer {
             die "BUG: Handler for option '$o' must either be ".
                 "an arrayref or coderef";
         }
+        $getopt_spec->{$o} = $ov;
     }
 
     my $aspec = delete $getopt_spec->{'<>'};
@@ -108,8 +134,9 @@ follows:
          'help|h'     => undef,               # no completion, no option value
          'verbose!'   => undef,               #
          'on-fail=s'  => ['skip', 'die'],     # complete from a list of words
+         'template=s' => _file(file_ext_filter=>['tmpl', 'html']),
+                                              # complete from *.tmpl or *.html files
          '<>'         => _user(),             # complete from list of users
-
      },
  );
 
@@ -145,6 +172,15 @@ This module lets you easily add shell tab completion to an existing CLI program.
 =head1 COMPLETION FUNCTIONS
 
 All these functions accept a hash argument.
+
+=head2 _dir
+
+Complete from directories. See L<Complete::File>'s C<complete_dir> for more
+details.
+
+=head2 _file
+
+Complete from files. See L<Complete::File>'s C<complete_file> for more details.
 
 =head2 _gid
 
