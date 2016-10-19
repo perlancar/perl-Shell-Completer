@@ -124,10 +124,11 @@ sub declare_completer {
 
 =head1 SYNOPSIS
 
-Suppose you have a CLI named C<empower-users> that accepts some command-line
-options and arguments. To add tab completion for C<foo>, write C<_foo> as
-follows:
+Suppose you have a CLI named C<process-users> that accepts some command-line
+options and arguments. To add tab completion for C<process-users>, write
+C<_process-users> as follows:
 
+ #!/usr/bin/env perl
  use Shell::Completer;
  declare_completer(
      options => {
@@ -142,19 +143,22 @@ follows:
 
 Install it (on bash):
 
- % complete -C _foo foo
+ % complete -C _process-users process-users
 
 or use L<shcompgen>.
 
-Now you can do completion for C<foo>:
+Now you can do completion for C<process-users>:
 
- % foo -on<tab>
- % foo --on-fail _
+ % process-users -on<tab>
+ % process-users --on-fail _
 
- % foo --on-fail <tab>
+ % process-users --on-fail <tab>
  die     skip
- % foo --on-fail s<tab>
- % foo --on-fail skip _
+ % process-users --on-fail s<tab>
+ % process-users --on-fail skip _
+
+ % process-users b<tab>
+ bob     bobby
 
 
 =head1 DESCRIPTION
