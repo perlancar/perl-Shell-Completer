@@ -14,6 +14,9 @@ our %comp_funcs = (
     _pid           => ['Unix', 'complete_pid'],
     _uid           => ['Unix', 'complete_uid'],
     _user          => ['Unix', 'complete_user'],
+    _perl_module   => ['Module', 'complete_module'],
+    _int           => ['Number', 'complete_int'],
+    _float         => ['Number', 'complete_float'],
 );
 
 for my $f (keys %comp_funcs) {
@@ -94,7 +97,6 @@ sub declare_completer {
         ($words,$cword) = @{ Complete::Bash::join_wordbreak_words($words, $cword) };
     } elsif ($ENV{COMMAND_LINE}) {
         require Complete::Tcsh;
-        $shell = 'tcsh';
         ($words, $cword) = @{ Complete::Tcsh::parse_cmdline() };
     }
 
@@ -108,9 +110,11 @@ sub declare_completer {
     );
 
     if ($shell eq 'bash') {
+        require Complete::Bash;
         print Complete::Bash::format_completion(
             $compres, {word=>$words->[$cword]});
     } elsif ($shell eq 'tcsh') {
+        require Complete::Tcsh;
         print Complete::Tcsh::format_completion($compres);
     } else {
         die "Unknown shell '$shell'";
@@ -210,6 +214,20 @@ more details.
 
 Complete from list of Unix user names. See L<Complete::Unix>'s C<complete_user>
 for more details.
+
+=head2 _perl_module
+
+Complete from a list of installed Perl modules. See L<Complete::Module>'s
+C<complete_module> for more details.
+
+=head2 _int
+
+Complete integer. See L<Complete::Number>'s C<complete_int> for more details.
+
+=head2 _float
+
+Complete floating number. See L<Complete::Number>'s C<complete_float> for more
+details.
 
 
 =head1 TODOS AND IDEAS
